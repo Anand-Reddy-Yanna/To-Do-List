@@ -1,65 +1,56 @@
-const form = document.getElementById("form");
-const input = document.getElementById("input");
-const todosUL = document.getElementById("todos");
+let tasks = [];
 
-const todos = JSON.parse(localStorage.getItem("todos"));
-
-if (todos) {
-  todos.forEach((todo) => addTodo(todo));
-}
-
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  addTodo();
-});
-
-function addTodo(todo) {
-  let todoText = input.value;
-
-  if (todo) {
-    todoText = todo.text;
-  }
-
-  if (todoText) {
-    const todoEl = document.createElement("li");
-    if (todo && todo.completed) {
-      todoEl.classList.add("completed");
+    function updateProgress() {
+      const completed = tasks.filter(t => t.done).length;
+      const total = tasks.length;
+      document.getElementById('progressCount').innerText = `${completed}/${total}`;
     }
 
-    todoEl.innerText = todoText;
+    function renderTasks() {
+      const taskList = document.getElementById('taskList');
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const taskEl = document.createElement('div');
+        taskEl.className = 'task';
+        taskEl.innerHTML = `
+          <div class="text">
+            <input type="checkbox" onchange="toggleTask(${index})" ${task.done ? 'checked' : ''}> ${task.text}
+          </div>
+          <div>
+            <button onclick="editTask(${index})">✏️</button>
+            <button onclick="deleteTask(${index})">🗑️</button>
+          </div>
+        `;
+        taskList.appendChild(taskEl);
+      });
+      updateProgress();
+    }
 
-    todoEl.addEventListener("click", () => {
-      todoEl.classList.toggle("completed");
-      updateLS();
-    });
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      const text = input.value.trim();
+      if (text) {
+        tasks.push({ text, done: false });
+        input.value = '';
+        renderTasks();
+      }
+    }
 
-    todoEl.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
+    function toggleTask(index) {
+      tasks[index].done = !tasks[index].done;
+      renderTasks();
+    }
 
-      todoEl.remove();
-      updateLS();
-    });
+    function editTask(index) {
+      const newText = prompt('Edit task:', tasks[index].text);
+      if (newText !== null) {
+        tasks[index].text = newText.trim();
+        renderTasks();
+      }
+    }
 
-    todosUL.appendChild(todoEl);
-
-    input.value = "";
-
-    updateLS();
-  }
-}
-
-function updateLS() {
-  todosEl = document.querySelectorAll("li");
-
-  const todos = [];
-
-  todosEl.forEach((todoEl) => {
-    todos.push({
-      text: todoEl.innerText,
-      completed: todoEl.classList.contains("completed"),
-    });
-  });
-
-  localStorage.setItem("todos", JSON.stringify(todos));
-}
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      renderTasks();
+    }
+  
